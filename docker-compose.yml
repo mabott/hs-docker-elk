@@ -57,6 +57,8 @@ services:
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+      # Added for a SID-to-username mapping dictionary file
+      - ./logstash/lookup/SID2name.yml:/usr/share/logstash/lookup/SID2name.yml:ro,Z
     ports:
       - "5044:5044"
       - "50000:50000/tcp"
