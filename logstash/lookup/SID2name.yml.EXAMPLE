@@ -1,0 +1,11 @@
+# This is an example YAML dictionary where keys are SIDs and values are usernames
+# You can create one of these for your own domain by using the following Powershell 
+# one-liner on a domain-joined Windows box as a Domain Admin:
+#
+# wmic useraccount get sid,name | Select-Object -Skip 1 | Where-Object{ $_.Trim() -ne '' } | ForEach-Object{$a,$b = $_ -replace '\r\n','' -split '\s+',2; [string]::Format("{0}: {1}", $b.Trim(), $a.Trim())}
+#
+S-1-5-21-3381569709-2126576801-590780474-500: Administrator
+S-1-5-21-3381569709-2126576801-590780474-503: DefaultAccount
+S-1-5-21-3381569709-2126576801-590780474-1001: demo
+S-1-5-21-3381569709-2126576801-590780474-501: Guest
+
