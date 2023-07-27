@@ -11,11 +11,11 @@ Fleet provides central management capabilities for [Elastic Agents][fleet-doc] v
 with Elasticsearch acting as the communication layer.
 Fleet Server is the central component which allows connecting Elastic Agents to the Fleet.
 
-## Usage
+## Requirements
 
-> **Note**  
-> Elastic Agent does not retry failed connections to Kibana upon the initial enrollment phase. Therefore, Kibana must be
-> fully started before this extension can be run.
+The Fleet Server exposes the TCP port `8220` for Agent to Server communications.
+
+## Usage
 
 To include Fleet Server in the stack, run Docker Compose from the root of the repository with an additional command line
 argument referencing the `fleet-compose.yml` file:
@@ -37,7 +37,6 @@ management UI: [Fleet UI Settings][fleet-cfg].
 
 ## Known Issues
 
-- Every re-creation of the `fleet-server` container creates a duplicate agent in Fleet's central management.
 - Logs and metrics are only collected within the Fleet Server's container. Ultimately, we want to emulate the behaviour
   of the existing Metricsbeat and Filebeat extensions, and collect logs and metrics from all ELK containers
   out-of-the-box. Unfortunately, this kind of use-case isn't (yet) well supported by Fleet, and most advanced
@@ -51,6 +50,13 @@ management UI: [Fleet UI Settings][fleet-cfg].
 ## See also
 
 [Fleet and Elastic Agent Guide][fleet-doc]
+
+## Screenshots
+
+![fleet-agents](https://user-images.githubusercontent.com/3299086/202701399-27518fe4-17b7-49d1-aefb-868dffeaa68a.png
+"Fleet Agents")
+![elastic-agent-dashboard](https://user-images.githubusercontent.com/3299086/202701404-958f8d80-a7a0-4044-bbf9-bf73f3bdd17a.png
+"Elastic Agent Dashboard")
 
 [fleet-doc]: https://www.elastic.co/guide/en/fleet/current/fleet-overview.html
 [fleet-pol]: https://www.elastic.co/guide/en/fleet/current/agent-policy.html
