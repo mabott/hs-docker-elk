@@ -4,19 +4,28 @@ set -eu
 set -o pipefail
 
 
-source "$(dirname ${BASH_SOURCE[0]})/lib/testing.sh"
+source "${BASH_SOURCE[0]%/*}"/lib/testing.sh
 
 
 cid_es="$(container_id elasticsearch)"
+cid_fl="$(container_id fleet-server)"
+cid_apm="$(container_id apm-server)"
+
 ip_es="$(service_ip elasticsearch)"
+ip_fl="$(service_ip fleet-server)"
+ip_apm="$(service_ip apm-server)"
 
-log 'Waiting for readiness of Elasticsearch'
+grouplog 'Wait for readiness of Elasticsearch'
 poll_ready "$cid_es" "http://${ip_es}:9200/" -u 'elastic:testpasswd'
+endgroup
 
-# Fleet-managed Elastic Agent does not expose a liveness endpoint.
-# Wait for the existence of the metrics index instead.
-log 'Waiting for creation of metrics index in Elasticsearch'
-poll_ready "$cid_es" "http://${ip_es}:9200/metrics-system.cpu-default" -u 'elastic:testpasswd'
+grouplog 'Wait for readiness of Fleet Server'
+poll_ready "$cid_fl" "http://${ip_fl}:8220/api/status"
+endgroup
+
+grouplog 'Wait for readiness of APM Server'
+poll_ready "$cid_apm" "http://${ip_apm}:8200/"
+endgroup
 
 # We expect to find metrics entries using the following query:
 #

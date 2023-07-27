@@ -81,7 +81,7 @@ jobs:
           if [[ ${git_status} ]]; then
               echo -e 'Changes to be committed:\n'
               echo "${git_status}"
-              echo '::set-output name=has_changes::true'
+              echo 'has_changes=true' >>"$GITHUB_OUTPUT"
           fi
 
       - name: Impersonate update bot
@@ -94,7 +94,7 @@ jobs:
 
       - name: Send pull request to update to new version
         if: steps.update-files.outputs.has_changes
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ steps.generate-token.outputs.token }}
           branch: update/${{ matrix.branch }}
