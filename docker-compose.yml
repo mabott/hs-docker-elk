@@ -78,18 +78,11 @@ services:
       # Added for a SID-to-username mapping dictionary file
       - ./logstash/lookup/SID2name.yml:/usr/share/logstash/lookup/SID2name.yml:ro,Z
     ports:
-<<<<<<< HEAD
-      - "5044:5044"
-      - "50000:50000/tcp"
-      - "50000:50000/udp"
-      - "9600:9600"
-      - "1514:514"
-=======
       - 5044:5044
       - 50000:50000/tcp
       - 50000:50000/udp
       - 9600:9600
->>>>>>> 1584390f909297e938a62fd4d4cfe385acebdc3f
+      - 1514:514
     environment:
       LS_JAVA_OPTS: -Xms256m -Xmx256m
       LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
