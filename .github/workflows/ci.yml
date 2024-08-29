@@ -18,7 +18,7 @@ jobs:
       COMPOSE_PROJECT_NAME: docker-elk
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       #####################################################
       #                                                   #
@@ -30,7 +30,6 @@ jobs:
         run: >-
           docker compose
           -f docker-compose.yml
-          -f extensions/logspout/logspout-compose.yml
           -f extensions/fleet/fleet-compose.yml
           -f extensions/fleet/agent-apmserver-compose.yml
           -f extensions/metricbeat/metricbeat-compose.yml
@@ -46,62 +45,40 @@ jobs:
       ########################################################
 
       - name: Set password of every built-in user to 'testpasswd'
-        run: |
+        run: >-
+          sed -i
+          -e 's/\(ELASTIC_PASSWORD=\)'\''changeme'\''/\1testpasswd/g'
+          -e 's/\(LOGSTASH_INTERNAL_PASSWORD=\)'\''changeme'\''/\1testpasswd/g'
+          -e 's/\(KIBANA_SYSTEM_PASSWORD=\)'\''changeme'\''/\1testpasswd/g'
+          -e 's/\(METRICBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g'
+          -e 's/\(FILEBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g'
+          -e 's/\(HEARTBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g'
+          -e 's/\(MONITORING_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g'
+          -e 's/\(BEATS_SYSTEM_PASSWORD=\)'\'\''/\1testpasswd/g'
+          .env
 
-          sed -i -e 's/\(ELASTIC_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(LOGSTASH_INTERNAL_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(KIBANA_SYSTEM_PASSWORD=\)'\''changeme'\''/\1testpasswd/g' \
-                 -e 's/\(METRICBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(FILEBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(HEARTBEAT_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(MONITORING_INTERNAL_PASSWORD=\)'\'\''/\1testpasswd/g' \
-                 -e 's/\(BEATS_SYSTEM_PASSWORD=\)'\'\''/\1testpasswd/g' .env
+      - name:  Set up users and roles
+        run: docker compose up setup
 
-      ##########################################################
-      #                                                        #
-      # Test core components: Elasticsearch, Logstash, Kibana. #
-      #                                                        #
-      ##########################################################
+      #############################
+      #                           #
+      # Test core and extensions. #
+      #                           #
+      #############################
 
-      - name:  Run the stack
-        run: |
-          docker compose up setup
-          docker compose up -d
+      # Elasticsearch's high disk watermark gets regularly exceeded on GitHub Actions runners.
+      # https://www.elastic.co/guide/en/elasticsearch/reference/8.10/fix-watermark-errors.html
+      - name: Disable Elasticsearch disk allocation decider
+        run: .github/workflows/scripts/disable-disk-alloc-decider.sh
+
+      #
+      # Core components: Elasticsearch, Logstash, Kibana
+      #
 
       - name: Execute core test suite
-        run: .github/workflows/scripts/run-tests-core.sh
-
-      ##############################
-      #                            #
-      # Test supported extensions. #
-      #                            #
-      ##############################
-
-      #
-      # Logspout
-      #
-
-      - name: Execute Logspout test suite
         run: |
-
-          # Set mandatory Logstash settings
-
-          sed -i '$ a input { udp { port => 50000 codec => json } }' logstash/pipeline/logstash.conf
-
-          # Restart Logstash for changes to take effect
-
-          docker compose restart logstash
-
-          # Run Logspout and execute tests.
-
-          docker compose -f docker-compose.yml -f extensions/logspout/logspout-compose.yml up --remove-orphans -d logspout
-          .github/workflows/scripts/run-tests-logspout.sh
-
-          # Revert changes to Logstash configuration
-
-          sed -i '/input { udp { port => 50000 codec => json } }/d' logstash/pipeline/logstash.conf
-          docker compose restart logstash
-
+          docker compose up -d
+          .github/workflows/scripts/run-tests-core.sh
           # next steps don't need Logstash
           docker compose stop logstash
 
@@ -176,7 +153,6 @@ jobs:
 
           docker compose \
           -f docker-compose.yml \
-          -f extensions/logspout/logspout-compose.yml \
           -f extensions/fleet/fleet-compose.yml \
           -f extensions/fleet/agent-apmserver-compose.yml \
           -f extensions/metricbeat/metricbeat-compose.yml \
@@ -187,7 +163,6 @@ jobs:
 
           docker compose \
           -f docker-compose.yml \
-          -f extensions/logspout/logspout-compose.yml \
           -f extensions/fleet/fleet-compose.yml \
           -f extensions/fleet/agent-apmserver-compose.yml \
           -f extensions/metricbeat/metricbeat-compose.yml \
@@ -200,7 +175,7 @@ jobs:
 
       - name: Upload collected troubleshooting data
         if: always() && steps.debug-data.outputs.path
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: debug-data
           path: ${{ steps.debug-data.outputs.path }}/*.*
@@ -216,7 +191,6 @@ jobs:
         run: >-
           docker compose
           -f docker-compose.yml
-          -f extensions/logspout/logspout-compose.yml
           -f extensions/fleet/fleet-compose.yml
           -f extensions/fleet/agent-apmserver-compose.yml
           -f extensions/metricbeat/metricbeat-compose.yml
